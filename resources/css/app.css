@@ -1,0 +1,54 @@
+@import 'tailwindcss';
+@import '../../vendor/livewire/flux/dist/flux.css';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../vendor/livewire/flux-pro/stubs/**/*.blade.php';
+@source '../../vendor/livewire/flux/stubs/**/*.blade.php';
+
+
+@theme {
+    --color-primary: #006FEE;
+    --color-primary-dark: #005bc4;
+    --color-primary-light: #338ef7;
+
+    --color-secondary: #7828c8;
+    --color-secondary-dark: #6020a0;
+    --color-secondary-light: #9353d3;
+
+    --color-content-1: #111113;
+    --color-content-2: oklch(21% 0.006 285.885);
+    --color-content-3: oklch(27.4% 0.006 286.033);
+    --color-content-4: oklch(37% 0.013 285.805);
+
+    --color-background: #000000;
+    --color-foreground: #03030A;
+    --color-border: #ffffff26;
+
+    --color-focus: #006FEE;
+
+    --color-text: #ECEDEE;
+    --color-text-light: #d2d7df;
+    --color-text-lighter: #96a2b5;
+
+    --color-success: #17c964;
+    --color-warning: #f5a524;
+    --color-error: #f31260;
+
+    --color-success-content: #002900;
+    --color-warning-content: #292900;
+    --color-error-content: #ffffff;
+
+}
+
+:root {
+    font-family: "JetBrains Mono", monospace;
+}
+
+.material-symbols-outlined {
+    font-variation-settings:
+        'FILL' 0,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24
+}
