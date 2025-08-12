@@ -13,11 +13,12 @@ use Illuminate\Support\Facades\DB;
 
 class Dash extends Component
 {
-    public $classes, $games, $multipliers = [], $game, $class, $bet, $player_gets, $player_multiplier, $records;
+    public $classes, $games, $multipliers = [], $game, $class, $bet, $player_gets, $player_multiplier, $records, $bet_average, $sum_cashout;
 
     public function mount()
     {
         $this->get_data();
+        $this->class = 1;
     }
 
     public function get_data()
@@ -29,8 +30,10 @@ class Dash extends Component
         }
         $this->records = Records::orderBy('id', 'desc')->limit(20)->get();
         foreach ($this->records as $record) {
-            $record->player_gets = $record->multiplier * $record->bet;
+            $record->player_gets = round($record->multiplier * $record->bet);
         }
+        $this->get_stat();
+        $this->calculate_multiplier();
     }
 
     public function updatedMultipliers($value, $key)
@@ -58,6 +61,7 @@ class Dash extends Component
         }
 
         $this->get_data();
+
     }
 
     public function save()
@@ -70,10 +74,43 @@ class Dash extends Component
             'multiplier' => $multiplier,
             'bet' => $this->bet,
         ]);
-        $this->player_gets = $multiplier * $this->bet;
+        $this->player_gets = round($multiplier * $this->bet);
         $this->player_multiplier = $multiplier;
         $this->reset(['game', 'class', 'bet']);
         $this->get_data();
+    }
+
+    public function get_stat()
+    {
+        $this->reset(['sum_cashout']);
+        $sum_bet = 0;
+        $count_records = Records::count();
+        foreach ($this->games as $game) {
+            $this->sum_cashout += $game->cashout;
+        }
+        foreach ($this->records as $record) {
+            $sum_bet += $record->bet;
+        }
+        if ($sum_bet > 0 && $count_records > 0) {
+            $this->bet_average = $sum_bet / $count_records;
+        }
+    }
+
+    public function calculate_multiplier()
+    {
+        //*! multiplier = base_multiplier * (global_avg_bets / game_bets)
+        foreach ($this->games as $game) {
+            // $game->multiplier =  round($this->all_average / $game->cashout * 10);
+            $sum_bets = Records::where('game_id', $game->id)->sum('bet');
+            if ($game->cashout == 0) {
+                $game->multiplier = 1.5;
+            } else {
+                $game->multiplier = round(2 * ($this->bet_average / $sum_bets), 1);
+                $game->multiplier = max(min($game->multiplier, 6.0), 1.5); // between 0.5x and 3.0x
+            }
+            // dd($this->bet_average, $this->all_average, $game->cashout, $this->sum_cashout);
+            $game->save();
+        }
     }
 
     public function fetch_sheets()
