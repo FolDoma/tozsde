@@ -8,8 +8,8 @@
     </div>
 
 
-    <div class="gap-4 grid grid-cols-1 lg:grid-cols-5">
-        <div class="p-2 border border-border rounded-md w-full bg-content-1 lg:col-span-3 2xl:col-span-2">
+    <div class="gap-4 grid grid-cols-1 lg:grid-cols-5 grid-flow-row">
+        <div class="p-2 border border-border rounded-md w-full bg-content-1 col-span-1 lg:col-span-3 2xl:col-span-2">
             <table class="table-auto w-full">
                 <thead>
                     <tr>
@@ -43,7 +43,7 @@
                 </tbody>
             </table>
         </div>
-        <form wire:submit="save" class="p-2 border border-border rounded-md w-full bg-content-1 lg:col-span-2 2xl:col-span-2">
+        <form wire:submit="save" class="p-2 border border-border rounded-md w-full bg-content-1 col-span-1 lg:col-span-2 2xl:col-span-2">
             <p>Add ticket</p>
             <p>Choose class:</p>
             <div class="grid grid-cols-2">
@@ -78,14 +78,25 @@
                 </div>
             </div>
         </form>
-        <div class="p-2 border border-border rounded-md w-full bg-content-1 divide-y divide-dashed divide-text/40">
-            @foreach($records as $record)
-            <div class="">
-                {{$record->game->name}}
-                {{$record->class->name}}
-                {{$record->player_gets}}
-            </div>
-            @endforeach
+        <div class="p-2 border border-border rounded-md w-full bg-content-1">
+            <table class="table-auto w-full">
+                <thead>
+                    <tr>
+                        <th>Game</th>
+                        <th>Class</th>
+                        <th>Cashout</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-dashed divide-text/40">
+                    @foreach($records as $record)
+                    <tr class="">
+                        <td>{{$record->game->name}}</td>
+                        <td>{{$record->class->name}}</td>
+                        <td>{{$record->player_gets}}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
         <div class="p-2 mb-10 border border-border rounded-md w-full bg-content-1 lg:col-span-2">
             <div>Bet average: {{$bet_average}}</div>
