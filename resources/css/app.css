@@ -41,6 +41,24 @@
 
 }
 
+/* width */
+::-webkit-scrollbar {
+    @apply w-2;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    @apply bg-foreground rounded-full;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full hover:bg-text-lighter/50;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {}
+
 :root {
     font-family: "JetBrains Mono", monospace;
 }

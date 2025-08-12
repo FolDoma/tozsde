@@ -8,9 +8,9 @@
     </div>
 
 
-    <div class="flex gap-4">
-        <div class="p-2 border border-border rounded-md w-fit bg-content-1">
-            <table class="table-auto">
+    <div class="gap-4 grid grid-cols-1 lg:grid-cols-5">
+        <div class="p-2 border border-border rounded-md w-full bg-content-1 lg:col-span-3 2xl:col-span-2">
+            <table class="table-auto w-full">
                 <thead>
                     <tr>
                         <th class="p-2">Game</th>
@@ -24,7 +24,7 @@
                         <td class="p-2">{{$game->name}}</td>
                         <td class="pl-4 p-2">{{$game->room}}</td>
                         <td class="pl-8 p-2 flex">
-                            <div>{{$game->manual_multiplier ?? $game->multiplier}} X</div>
+                            <div class="ml-auto">{{$game->manual_multiplier ?? $game->multiplier}} X</div>
                             <div class="ml-4 flex">
                                 <!-- <p class="mr-2">Auto</p> -->
                                 <label for="toggle-{{$game->id}}" class="relative block h-6 w-10 rounded-full bg-content-3 transition-colors [-webkit-tap-highlight-color:_transparent] has-checked:bg-error">
@@ -43,7 +43,7 @@
                 </tbody>
             </table>
         </div>
-        <form wire:submit="save" class="p-2 border border-border rounded-md w-fit bg-content-1">
+        <form wire:submit="save" class="p-2 border border-border rounded-md w-full bg-content-1 lg:col-span-2 2xl:col-span-2">
             <p>Add ticket</p>
             <p>Choose class:</p>
             <div class="grid grid-cols-2">
@@ -62,7 +62,7 @@
                         @foreach($classes as $class)
                         <label for="class-{{$class->id}}" class="flex justify-center bg-content-2 p-1 transition-colors hover:bg-content-3  has-checked:bg-success has-checked:text-content-1">
                             <p class="self-center">{{$class->name}}</p>
-                            <input wire:model="class" required type="radio" name="class-selector" value="{{$class->id}}" id="class-{{$class->id}}" class="sr-only" />
+                            <input wire:model="class" required type="radio" name="class-selector" value="{{$class->id}}" id="class-{{$class->id}}" class="sr-only"/>
                         </label>
                         @endforeach
                     </div>
@@ -78,7 +78,7 @@
                 </div>
             </div>
         </form>
-        <div class="p-2 border border-border rounded-md w-fit bg-content-1 divide-y divide-dashed divide-text/40">
+        <div class="p-2 border border-border rounded-md w-full bg-content-1 divide-y divide-dashed divide-text/40">
             @foreach($records as $record)
             <div class="">
                 {{$record->game->name}}
@@ -87,7 +87,27 @@
             </div>
             @endforeach
         </div>
-
+        <div class="p-2 mb-10 border border-border rounded-md w-full bg-content-1 lg:col-span-2">
+            <div>Bet average: {{$bet_average}}</div>
+            <table class="table-auto w-full">
+                <thead>
+                    <tr>
+                        <th>Game</th>
+                        <th>Cashout</th>
+                        <th>Multi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($records as $record)
+                    <tr>
+                        <td class="text-center">{{$record->game->name}}</td>
+                        <td class="text-center">{{$record->game->cashout}}</td>
+                        <td class="text-center">{{$record->game->multiplier}}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     </div>
 
 </div>
