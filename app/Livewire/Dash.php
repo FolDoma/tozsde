@@ -57,7 +57,7 @@ class Dash extends Component
             $game->save();
         }
 
-        $this->games = Games::all(); // Refresh
+        $this->get_data();
     }
 
     public function save()
