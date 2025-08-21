@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Dash;
+use App\Livewire\Main;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
@@ -10,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 //     return view('welcome');
 // })->name('home');
 
+Route::get('/', Main::class)->name('main');
 Route::get('/dash', Dash::class)->name('dash');
 
 // Route::view('dashboard', 'dashboard')

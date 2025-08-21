@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Classes;
 use App\Models\Games;
 use App\Models\Records;
+use App\Models\Settings;
 use Livewire\Component;
 use Illuminate\Support\Facades\Http;
 use League\Csv\Reader;
@@ -13,12 +14,11 @@ use Illuminate\Support\Facades\DB;
 
 class Dash extends Component
 {
-    public $classes, $games, $multipliers = [], $game, $class, $bet, $player_gets, $player_multiplier, $records, $bet_average, $sum_cashout;
+    public $classes, $games, $multipliers = [], $game, $class, $bet, $player_gets, $player_multiplier, $records, $bet_average, $sum_cashout, $sum_bet = 0, $cashout_average, $base_multiplier = 1.3;
 
     public function mount()
     {
         $this->get_data();
-        $this->class = 1;
     }
 
     public function get_data()
@@ -28,12 +28,55 @@ class Dash extends Component
         foreach ($this->games as $game) {
             $this->multipliers[$game->id] = $game->manual_multiplier ?? '';
         }
-        $this->records = Records::orderBy('id', 'desc')->limit(20)->get();
+        $this->records = Records::orderBy('id', 'desc')->limit(12)->get();
         foreach ($this->records as $record) {
             $record->player_gets = round($record->multiplier * $record->bet);
         }
+        $this->base_multiplier = (float) Settings::where('name', 'base_multiplier')->value('value');
         $this->get_stat();
         $this->calculate_multiplier();
+    }
+
+    public function get_stat()
+    {
+        $this->reset(['sum_cashout', 'sum_bet']);
+        $count_records = Records::count();
+        $count_games = Games::count();
+        $records = Records::all();
+        foreach ($this->games as $game) {
+            $this->sum_cashout += $game->cashout;
+        }
+        foreach ($records as $record) {
+            $this->sum_bet += $record->bet;
+        }
+
+        //* Calculating average cashout
+        if ($records->count() > 0) {
+            $sum_cashout = 0;
+            foreach ($this->games as $game) {
+                $sum_cashout += $game->cashout;
+            }
+            $this->cashout_average = $sum_cashout / $count_games;
+        }
+    }
+
+    public function calculate_multiplier()
+    {
+        //*! multiplier = base_multiplier * (global_avg_bets / game_bets)
+        foreach ($this->games as $game) {
+            $sum_bets = Records::where('game_id', $game->id)->sum('bet');
+            $records = Records::where('game_id', $game->id)->get();
+
+            if ($game->cashout == 0) {
+                $game->multiplier = 1.1;
+            } else {
+                // $game->multiplier = round(1 * ($this->sum_cashout / $game->cashout), 1);
+                $game->multiplier = round($this->base_multiplier * ($this->cashout_average / $game->cashout), 1); //1.3 is the sweet spot for base multi
+                $game->multiplier = max(min($game->multiplier, 4.0), 1.1); // between 0.5x and 3.0x
+            }
+            // dd($this->bet_average, $this->all_average, $game->cashout, $this->sum_cashout);
+            $game->save();
+        }
     }
 
     public function updatedMultipliers($value, $key)
@@ -59,9 +102,14 @@ class Dash extends Component
             }
             $game->save();
         }
-
         $this->get_data();
+    }
 
+    public function updatedBaseMultiplier(){
+        $base_multiplier_object = Settings::where('name', 'base_multiplier')->first();
+        $base_multiplier_object->value = $this->base_multiplier;
+        $base_multiplier_object->save();
+        $this->get_data();
     }
 
     public function save()
@@ -80,37 +128,11 @@ class Dash extends Component
         $this->get_data();
     }
 
-    public function get_stat()
+    public function delete_record($id)
     {
-        $this->reset(['sum_cashout']);
-        $sum_bet = 0;
-        $count_records = Records::count();
-        foreach ($this->games as $game) {
-            $this->sum_cashout += $game->cashout;
-        }
-        foreach ($this->records as $record) {
-            $sum_bet += $record->bet;
-        }
-        if ($sum_bet > 0 && $count_records > 0) {
-            $this->bet_average = $sum_bet / $count_records;
-        }
-    }
-
-    public function calculate_multiplier()
-    {
-        //*! multiplier = base_multiplier * (global_avg_bets / game_bets)
-        foreach ($this->games as $game) {
-            // $game->multiplier =  round($this->all_average / $game->cashout * 10);
-            $sum_bets = Records::where('game_id', $game->id)->sum('bet');
-            if ($game->cashout == 0) {
-                $game->multiplier = 1.5;
-            } else {
-                $game->multiplier = round(2 * ($this->bet_average / $sum_bets), 1);
-                $game->multiplier = max(min($game->multiplier, 6.0), 1.5); // between 0.5x and 3.0x
-            }
-            // dd($this->bet_average, $this->all_average, $game->cashout, $this->sum_cashout);
-            $game->save();
-        }
+        $record = Records::findOrFail($id);
+        $record->delete();
+        $this->get_data();
     }
 
     public function fetch_sheets()
@@ -150,6 +172,32 @@ class Dash extends Component
         }
         $this->reset();
         $this->get_data();
+    }
+
+    public function test_insert()
+    {
+        foreach ($this->games as $game) {
+            for ($i = 0; $i < random_int(10, 30); $i++) {
+                DB::table('records')->insert([
+                    'game_id'    => $game->id,
+                    'class_id'   => 1,
+                    'bet'        => random_int(10, 30),
+                    'multiplier' => 1,
+                ]);
+            }
+        }
+
+
+
+
+        // foreach ($this->games as $game) {
+        //     DB::table('records')->insert([
+        //         'game_id' => $game->id,
+        //         'class_id' => 1,
+        //         'bet' => 1,
+        //         'multiplier' => 1,
+        //     ]);
+        // }
     }
 
     public function render()

@@ -9,7 +9,12 @@ class Games extends Model
     protected $appends = ['cashout'];
 
     public function getCashoutAttribute()
-    {
-        return Records::where('game_id', $this->id)->sum('bet');
+    {   
+        $sum_cashout = 0;
+        $records = Records::where('game_id', $this->id)->get();
+        foreach ($records as $record) {
+            $sum_cashout += round($record->bet * $record->multiplier);
+        }
+        return $sum_cashout;
     }
 }
