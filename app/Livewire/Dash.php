@@ -6,18 +6,21 @@ use App\Models\Classes;
 use App\Models\Games;
 use App\Models\Records;
 use App\Models\Settings;
+use Carbon\Carbon;
 use Livewire\Component;
 use Illuminate\Support\Facades\Http;
 use League\Csv\Reader;
 use Illuminate\Support\Facades\DB;
-
+use phpDocumentor\Reflection\PseudoTypes\True_;
 
 class Dash extends Component
 {
-    public $classes, $games, $multipliers = [], $game, $class, $bet, $player_gets, $player_multiplier, $records, $bet_average, $sum_cashout, $sum_bet = 0, $cashout_average, $base_multiplier = 1.3;
+    public $classes, $games, $multipliers = [], $game, $class, $bet, $player_gets, $player_multiplier, $records, $bet_average, $sum_cashout, $sum_bet = 0, $cashout_average, $base_multiplier = 1.3, $is_time, $calculate_time, $calculate_time_temp;
 
     public function mount()
     {
+        $timeValue = Settings::where('name', 'calculate_time')->value('value');
+        $this->calculate_time_temp = $timeValue ? Carbon::parse($timeValue)->toIso8601String() : null;
         $this->get_data();
     }
 
@@ -33,8 +36,30 @@ class Dash extends Component
             $record->player_gets = round($record->multiplier * $record->bet);
         }
         $this->base_multiplier = (float) Settings::where('name', 'base_multiplier')->value('value');
+
+        $timeValue = Settings::where('name', 'calculate_time')->value('value');
+        $this->calculate_time = $timeValue ? Carbon::parse($timeValue)->toIso8601String() : null;
+        if ($this->calculate_time != $this->calculate_time_temp) {
+            $this->dispatch('reload-page');
+        }
+        $sessionId = session()->getId();
+        $this->is_time = DB::table('sessions')->where('id', $sessionId)->value("is_time");
+
+        if ($this->is_time == true) {
+            if (is_null($this->calculate_time)) {
+                // case 1: never set
+                Settings::where('name', 'calculate_time')
+                    ->update(['value' => Carbon::now()]);
+            } else {
+                // case 2: check if 5 minutes passed
+                if (Carbon::parse($this->calculate_time)->addMinutes(5)->isPast()) {
+                    Settings::where('name', 'calculate_time')->update(['value' => Carbon::now()]);
+                    $this->get_stat();
+                    $this->calculate_multiplier();
+                }
+            }
+        }
         $this->get_stat();
-        $this->calculate_multiplier();
     }
 
     public function get_stat()
@@ -105,7 +130,8 @@ class Dash extends Component
         $this->get_data();
     }
 
-    public function updatedBaseMultiplier(){
+    public function updatedBaseMultiplier()
+    {
         $base_multiplier_object = Settings::where('name', 'base_multiplier')->first();
         $base_multiplier_object->value = $this->base_multiplier;
         $base_multiplier_object->save();
@@ -133,6 +159,24 @@ class Dash extends Component
         $record = Records::findOrFail($id);
         $record->delete();
         $this->get_data();
+    }
+
+    public function set_time()
+    {
+        $sessions = DB::table('sessions')->get();
+
+        foreach ($sessions as $session) {
+            if ($session->is_time == true) {
+                DB::table('sessions')
+                    ->where('id', $session->id)
+                    ->update(['is_time' => false]);
+            }
+        }
+
+        $sessionId = session()->getId();
+        DB::table('sessions')
+            ->where('id', $sessionId)
+            ->update(['is_time' => true]);
     }
 
     public function fetch_sheets()
@@ -186,8 +230,6 @@ class Dash extends Component
                 ]);
             }
         }
-
-
 
 
         // foreach ($this->games as $game) {

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('room');
-            $table->float('multiplier')->default(1);
+            $table->float('multiplier')->default(1.1);
             $table->float('manual_multiplier')->nullable();
             $table->timestamps();
         });

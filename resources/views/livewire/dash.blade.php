@@ -13,9 +13,8 @@
             <div role="menu" x-show="open" x-transition class="absolute end-0 top-12 z-auto w-56 divide-y divide-border overflow-hidden rounded border border-border bg-content-1 shadow-sm" style="display: none;">
                 <div>
                     <p class="block px-3 py-2 text-sm text-text-lighter">General</p>
-                    <a href="#" class="block px-3 py-2 text-sm font-medium transition-colors hover:bg-content-2 hover:text-text focus:bg-content-2 focus:text-text text-text-light" role="menuitem">Storefront</a>
-                    <a href="#" class="block px-3 py-2 text-sm font-medium transition-colors hover:bg-content-2 hover:text-text focus:bg-content-2 focus:text-text text-text-light" role="menuitem">Warehouse</a>
-                    <a href="#" class="block px-3 py-2 text-sm font-medium transition-colors hover:bg-content-2 hover:text-text focus:bg-content-2 focus:text-text text-text-light" role="menuitem">Stock</a>
+                    <button type="button" wire:click="set_time" class="block w-full px-3 py-2 text-sm font-medium transition-colors text-left hover:bg-content-2 hover:text-text focus:bg-content-2 focus:text-text text-text-light @if($is_time == True) bg-success/10 @endif" role="menuitem">Set this as time</button>
+                    <button type="button" wire:click="calculate_multiplier" class="block w-full px-3 py-2 text-sm font-medium transition-colors text-left hover:bg-content-2 hover:text-text focus:bg-content-2 focus:text-text text-text-light" role="menuitem">Calculate multipliers</button>
                     <div class="px-3 py-2 text-text-light border-t border-border">
                         <div class="text-center px-3 py-2">Base multiplier</div>
                         <div class="flex justify-between w-full">
@@ -40,6 +39,8 @@
                             </span>
                         </div>
                     </div>
+                    <div class="px-3 py-2 ">Cashout average: {{$cashout_average}}</div>
+                    <button type="button" wire:click="test_insert" class="block w-full px-3 py-2 text-left text-sm font-medium text-error transition-colors hover:bg-error/10 focus:bg-error/10">Test insert</button>
                     <button type="button" wire:click="fetch_sheets" class="block w-full px-3 py-2 text-left text-sm font-medium text-error transition-colors hover:bg-error/10 focus:bg-error/10">Fetch sheets/delete db</button>
                 </div>
             </div>
@@ -140,30 +141,57 @@
             </div>
             @endif
         </div>
-
-        <div class="p-2 mb-10 border border-border rounded-md w-full bg-content-1 lg:col-span-2">
-            <div>Bet average: {{$bet_average}}</div>
-            <div>Cashout average: {{$cashout_average}}</div>
-            <button wire:click="test_insert">Test insert</button>
-            <table class="table-auto w-full">
-                <thead>
-                    <tr>
-                        <th>Game</th>
-                        <th>Cashout</th>
-                        <th>Multi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($records as $record)
-                    <tr>
-                        <td class="text-center">{{$record->game->name}}</td>
-                        <td class="text-center">{{$record->game->cashout}}</td>
-                        <td class="text-center">{{$record->game->multiplier}}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
     </div>
+
+    <div class="text-center w-full mt-4">
+        <p class="text-2xl mb-4">Uj szorzok:</p>
+        <p wire:ignore id="countdown" class="text-6xl">0:00</p>
+    </div>
+
+<script>
+    // Only start the timer once
+    if (!window.countdownStarted) {
+        window.countdownStarted = true;
+
+        // Get the backend time (ISO 8601 string)
+        var calculateTime = "{{ $calculate_time }}";
+
+        // Compute the target time (+5 minutes)
+        var countDownDate = new Date(calculateTime).getTime() + 5 * 60 * 1000;
+
+        function updateTimer() {
+            var now = new Date().getTime();
+            var distance = countDownDate - now;
+
+            if (distance <= 0) {
+                // Stop timer
+                clearInterval(x);
+                // Refresh page when countdown reaches 0
+                window.location.reload();
+                return;
+            }
+
+            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            document.getElementById("countdown").textContent =
+                minutes + ":" + String(seconds).padStart(2, '0');
+        }
+
+        // Initial call
+        updateTimer();
+
+        // Update every second
+        var x = setInterval(updateTimer, 1000);
+    }
+</script>
+
+<script>
+    // Listen for the Livewire browser event
+    window.addEventListener('reload-page', () => {
+        location.reload(); // reload the page when event is triggered
+    });
+</script>
+
 
 </div>
