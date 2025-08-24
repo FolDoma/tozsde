@@ -3,7 +3,7 @@
         <p class="text-lg">Tozsde 2025</p>
         <div class="relative inline-flex ml-auto mb-2 z-40" x-data="{ open: false }" @click.outside="open = false">
             <span class="inline-flex divide-x divide-border overflow-hidden rounded-md border border-border bg-content-1 shadow-sm">
-                <button type="button" class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-content-2 hover:text-text focus:bg-content-2 focus:text-text text-text-light focus:relative">Main page -></button>
+                <a href="/" wire:navigate class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-content-2 hover:text-text focus:bg-content-2 focus:text-text text-text-light focus:relative">Main page -></a>
                 <button type="button" @click="open = !open" class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-content-2 hover:text-text focus:bg-content-2 focus:text-text text-text-light focus:relative" aria-label="Menu">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
