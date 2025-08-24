@@ -24,6 +24,11 @@
                         </div>
                         <input wire:model.live="base_multiplier" type="range" step="0.1" min="1" max="1.6" class="h-2 w-full cursor-ew-resize appearance-none rounded-full bg-content-3 text-green-600 disabled:cursor-not-allowed accent-secondary [::-webkit-slider-thumb]:bg-seaccent-secondary [::-moz-range-thumb]:bg-seaccent-secondary">
                     </div>
+                    <div class="px-3 py-2 text-text-light border-t border-border">
+                        @foreach($classes as $class)
+                        <div>{{$class->name}}: {{$class->cashout}}</div>
+                        @endforeach
+                    </div>
                 </div>
                 <div>
                     <p class="block px-3 py-2 text-sm text-text-lighter">Maintain</p>
@@ -148,50 +153,50 @@
         <p wire:ignore id="countdown" class="text-6xl">0:00</p>
     </div>
 
-<script>
-    // Only start the timer once
-    if (!window.countdownStarted) {
-        window.countdownStarted = true;
+    <script>
+        // Only start the timer once
+        if (!window.countdownStarted) {
+            window.countdownStarted = true;
 
-        // Get the backend time (ISO 8601 string)
-        var calculateTime = "{{ $calculate_time }}";
+            // Get the backend time (ISO 8601 string)
+            var calculateTime = "{{ $calculate_time }}";
 
-        // Compute the target time (+5 minutes)
-        var countDownDate = new Date(calculateTime).getTime() + 5 * 60 * 1000;
+            // Compute the target time (+5 minutes)
+            var countDownDate = new Date(calculateTime).getTime() + 5 * 60 * 1000;
 
-        function updateTimer() {
-            var now = new Date().getTime();
-            var distance = countDownDate - now;
+            function updateTimer() {
+                var now = new Date().getTime();
+                var distance = countDownDate - now;
 
-            if (distance <= 0) {
-                // Stop timer
-                clearInterval(x);
-                // Refresh page when countdown reaches 0
-                window.location.reload();
-                return;
+                if (distance <= 0) {
+                    // Stop timer
+                    clearInterval(x);
+                    // Refresh page when countdown reaches 0
+                    // window.location.reload();
+                    return;
+                }
+
+                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                document.getElementById("countdown").textContent =
+                    minutes + ":" + String(seconds).padStart(2, '0');
             }
 
-            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-            
-            document.getElementById("countdown").textContent =
-                minutes + ":" + String(seconds).padStart(2, '0');
+            // Initial call
+            updateTimer();
+
+            // Update every second
+            var x = setInterval(updateTimer, 1000);
         }
+    </script>
 
-        // Initial call
-        updateTimer();
-
-        // Update every second
-        var x = setInterval(updateTimer, 1000);
-    }
-</script>
-
-<script>
-    // Listen for the Livewire browser event
-    window.addEventListener('reload-page', () => {
-        location.reload(); // reload the page when event is triggered
-    });
-</script>
+    <script>
+        // Listen for the Livewire browser event
+        window.addEventListener('reload-page', () => {
+            location.reload(); // reload the page when event is triggered
+        });
+    </script>
 
 
 </div>
