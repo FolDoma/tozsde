@@ -180,7 +180,7 @@ class Dash extends Component
 
     public function fetch_sheets()
     {
-        $response = Http::get('https://docs.google.com/spreadsheets/d/1Br891asFKvPf4BsdsvnIesKA8MG060i1/gviz/tq?tqx=out:json');
+        $response = Http::get('https://docs.google.com/spreadsheets/d/1CzPdRwLgd0sHNl1p_sHmNYTj2PV3ZbY0/gviz/tq?tqx=out:json');
         $raw = $response->body(); // Get raw text
 
         // Remove the JS function wrapper
