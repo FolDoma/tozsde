@@ -9,7 +9,6 @@ use App\Models\Settings;
 use Carbon\Carbon;
 use Livewire\Component;
 use Illuminate\Support\Facades\Http;
-use League\Csv\Reader;
 use Illuminate\Support\Facades\DB;
 
 class Dash extends Component
@@ -180,39 +179,43 @@ class Dash extends Component
 
     public function fetch_sheets()
     {
-        $response = Http::get('https://docs.google.com/spreadsheets/d/1CzPdRwLgd0sHNl1p_sHmNYTj2PV3ZbY0/gviz/tq?tqx=out:json');
-        $raw = $response->body(); // Get raw text
+        $response = Http::get('https://docs.google.com/spreadsheets/d/1CzPdRwLgd0sHNl1p_sHmNYTj2PV3ZbY0/export?format=csv')->throw();
+        $stream = fopen('php://temp', 'r+');
+        fwrite($stream, $response->body());
+        rewind($stream);
 
-        // Remove the JS function wrapper
-        $jsonStart = strpos($raw, '{');
-        $wrappedJson = substr($raw, $jsonStart, -2); // Remove trailing ");"
-        $data = json_decode($wrappedJson, true);
+        $columns = fgetcsv($stream, null, ',', '"', '');
+        $games = [];
 
-        // Get the rows as a clean array
-        $columns = array_map(fn($col) => $col['label'], $data['table']['cols']);
+        while (($values = fgetcsv($stream, null, ',', '"', '')) !== false) {
+            $values = array_pad(array_slice($values, 0, count($columns)), count($columns), null);
+            $row = array_combine($columns, $values);
+            $name = trim($row['Játék'] ?? '');
 
-        $rows = collect($data['table']['rows'])->map(function ($row) use ($columns) {
-            $values = array_map(fn($cell) => $cell['v'] ?? null, $row['c']);
-            return array_combine($columns, $values);
+            if ($name === '' || in_array($name, ['Hárem', 'Bank'], true)) {
+                continue;
+            }
+
+            $room = trim($row['Helyszín'] ?? '');
+
+            if ($room === '') {
+                throw new \UnexpectedValueException("Missing room for game: {$name}");
+            }
+
+            $games[] = [
+                'name' => $name,
+                'room' => $room,
+            ];
+        }
+
+        fclose($stream);
+
+        DB::transaction(function () use ($games) {
+            Records::query()->delete();
+            Games::query()->delete();
+            DB::table('games')->insert($games);
         });
 
-        // dd($rows);
-
-        // DB::statement('SET FOREIGN_KEY_CHECKS=0;');  // Disable foreign key checks
-        // Classes::truncate();
-        Games::truncate();
-        Records::truncate();
-        // DB::statement('SET FOREIGN_KEY_CHECKS=1;');  // Re-enable foreign key checks
-
-        foreach ($rows as $row) {
-            // dd($row);
-            if ($row['Játék'] != '' && $row['Játék'] != "Hárem" && $row['Játék'] != "Bank") {
-                DB::table('games')->insert([
-                    'name' => $row['Játék'],
-                    'room' => $row['Helyszín'],
-                ]);
-            }
-        }
         $this->reset();
         $this->get_data();
     }
